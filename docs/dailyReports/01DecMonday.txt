@@ -1,0 +1,5 @@
+Today, our team sat down to discuss how we plan to progress with the sprints. We also realized that the game's storyline wasn’t fully defined yet—up until now, we only had a rough idea. So we took the time to clarify what kind of game we want to create and how we plan to achieve our goals. Most of the discussion focused on graphical challenges, as well as feedback each of us had received, which we can use to improve the overall gameplay experience.
+
+We also set up our Trello board, where we clearly track who is responsible for which tasks and when they should be completed. This makes our work transparent so that anyone can easily see what we are working on. In the future, we will continue to use Trello to monitor our progress, which is also helpful for our teachers to quickly see what tasks we have completed.
+
+Additionally, we created our own GitHub repository. This allows us to experiment and make mistakes safely, while the official school repository will only contain stable versions. We decided to set it up this way because it gives us more confidence when using branching and managing versions.

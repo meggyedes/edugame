@@ -1,53 +1,3 @@
-# Milo van Zee – Character Documentation
-
-## 🌊 Character Overview
-
-**Name:** Milo van Zee  
-**Age:** 16-18 years old  
-**Role:** Young Adventurer, Explorer  
-**Personality:** Curious, brave, cheerful, quick-thinking, resourceful. Milo inspires others with his enthusiasm and sense of adventure. He loves exploring, observing animals, and documenting the wonders of nature.
-
----
-
-## 🧭 Storyline
-
-Milo van Zee sets out on a long-awaited sea voyage, searching for excitement beyond the familiar world. A violent storm destroys his ship, leaving him stranded on a mysterious, uncharted island with only his journal, his camera, and an unbroken will to survive.
-
-Days turn into weeks, and he learns to live among the island’s secrets—strange animals, hidden wonders, and challenges that test his courage. When he is finally rescued, he returns home forever changed. Inspired by his adventure, he decides to travel the world, seeking new discoveries and unforgettable experiences.
-
-This marks the beginning of Milo’s greatest adventure—a journey filled with curiosity, courage, and the desire to inspire others with his stories.
-
----
-
-## 👀 Appearance
-
-- **Hair:** Light brown, slightly messy, windswept
-- **Eyes:** Bright green, sparkling with curiosity
-- **Skin:** Sun-kissed from outdoor adventures
-- **Clothing:**
-  - Light, short-sleeved explorer’s shirt with pockets
-  - Comfortable khaki shorts
-  - Lightweight olive-green jacket tied around waist
-- **Footwear:** Sturdy brown sandals (sometimes barefoot on sandy shores)
-- **Accessories:**
-  - Brown leather satchel for journal and tools
-  - Adventure hat with floppy brim
-  - Camera on a strap around his neck
-  - Optional rope bracelet or travel charm
-
-**Overall Look:** Milo is a young, energetic explorer whose practical yet playful outfit makes him ready for any adventure. His tools, hair, and sparkling eyes all convey curiosity and a love for discovery.
-
----
-
-## 🎯 Skills & Traits
-
-- Observation and nature documentation
-- Quick thinking and problem-solving
-- Resourcefulness in survival situations
-- Friendly, inspiring, and curious personality
-
----
-
 # Project Overview
 
 The goal of this project is to create a simple browser-based, TypeScript-powered world adventure game for Dutch children aged 9–12, where the player follows **Milo van Zee**, a curious young explorer, traveling the globe to discover and photograph animals in their natural habitats. The game should educate children in a subtle, interactive way—through exploration, observation, and pattern recognition—without quizzes or question-based tasks. Scientific facts, animal behaviors, habitats, and environmental concepts will be integrated naturally into the gameplay through interactive exploration, in-game visuals, and narrative storytelling.
@@ -110,9 +60,3 @@ Overall, the game will serve as an educational, motivational, and interactive ex
 | 05 Jan – 09 Jan | Sprint 4 – Project work            | • Final design document<br>• Final version of the game                                                           |
 | 19 Jan – 22 Jan | Exam Week – Presentation phase     | • Hosted version of the final game<br>• Prepared presentation based on the final game and design document        |
 | 04 Feb          | Final Demo at HZ (13:00–15:00)     | • Final version of the game                                                                                      |
-
----
-
-## 📝 Notes
-
-Milo van Zee is designed as a role model character for ages 9–12, encouraging curiosity, kindness, and adventure. His story and appearance are crafted to make him relatable, fun, and memorable for young players.
