@@ -1,0 +1,326 @@
+/* Main styles for Milo van Zee: World Explorer */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    background-color: #0a0a0a;
+    font-family: 'Arial', sans-serif;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+#gameContainer {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    background: radial-gradient(ellipse at center, #1a365d 0%, #0a0a0a 100%);
+}
+
+#gameCanvas {
+    display: block;
+    background-color: #228B22;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    /* Canvas will fill the screen */
+    width: 100%;
+    height: 100%;
+}
+
+/* Fullscreen button */
+#fullscreenBtn {
+    position: fixed;
+    top: 15px;
+    right: 15px;
+    width: 44px;
+    height: 44px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(4px);
+}
+
+#fullscreenBtn:hover {
+    background: rgba(0, 0, 0, 0.8);
+    border-color: rgba(255, 255, 255, 0.6);
+    transform: scale(1.1);
+}
+
+#fullscreenBtn:active {
+    transform: scale(0.95);
+}
+
+#fullscreenBtn svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Hide fullscreen button when in fullscreen */
+:fullscreen #fullscreenBtn,
+:-webkit-full-screen #fullscreenBtn {
+    opacity: 0.3;
+}
+
+:fullscreen #fullscreenBtn:hover,
+:-webkit-full-screen #fullscreenBtn:hover {
+    opacity: 1;
+}
+
+/* Mobile Controls - hidden by default, shown via JavaScript during gameplay */
+#mobileControls {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    pointer-events: none;
+    z-index: 50;
+}
+
+#joystick {
+    position: fixed;
+    bottom: 30px;
+    left: 30px;
+    width: 120px;
+    height: 120px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto;
+    touch-action: none;
+}
+
+#joystickKnob {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    transition: transform 0.05s ease-out;
+}
+
+#mobileButtons {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    pointer-events: auto;
+}
+
+.mobileBtn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    background: rgba(76, 175, 80, 0.8);
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.1s, background 0.1s;
+}
+
+.mobileBtn:active {
+    transform: scale(0.9);
+    background: rgba(76, 175, 80, 1);
+}
+
+#cameraBtn {
+    background: rgba(33, 150, 243, 0.8);
+}
+
+#cameraBtn:active {
+    background: rgba(33, 150, 243, 1);
+}
+
+/* Loading Screen */
+#loadingScreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1a365d, #2d5a87);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    transition: opacity 0.5s ease-out;
+}
+
+#loadingScreen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loadingContent {
+    text-align: center;
+    color: white;
+}
+
+.loadingContent h1 {
+    font-size: 3rem;
+    color: #FFD700;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.loadingContent p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: #87CEEB;
+}
+
+.loadingBar {
+    width: 250px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    margin: 20px auto;
+    overflow: hidden;
+}
+
+.loadingProgress {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #81C784);
+    border-radius: 4px;
+    animation: loading 1.5s ease-in-out forwards;
+}
+
+@keyframes loading {
+    0% { width: 0%; }
+    100% { width: 100%; }
+}
+
+.loadingText {
+    color: #AAA;
+    font-size: 0.9rem;
+}
+
+/* Mobile responsive - canvas adjustments only, controls handled by JavaScript */
+@media (max-width: 768px), (pointer: coarse) {
+    #gameCanvas {
+        width: 100%;
+        height: 100%;
+    }
+}
+
+/* Desktop styling */
+@media (min-width: 1024px) {
+    #gameCanvas {
+        cursor: default;
+    }
+}
+
+/* Fullscreen specific styles */
+:fullscreen #gameContainer,
+:-webkit-full-screen #gameContainer {
+    background: #000;
+}
+
+:fullscreen #gameCanvas,
+:-webkit-full-screen #gameCanvas {
+    width: 100vw;
+    height: 100vh;
+}
+
+/* Animations */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Notification styles */
+.notification {
+    animation: slideUp 0.3s ease-out;
+}
+
+/* Photo flash effect */
+.flashEffect {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: white;
+    pointer-events: none;
+    animation: flash 0.3s ease-out forwards;
+    z-index: 999;
+}
+
+@keyframes flash {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+/* Cursor styles */
+#gameCanvas.cameraMode {
+    cursor: crosshair;
+}
+
+#gameCanvas.defaultMode {
+    cursor: default;
+}
+
+/* Focus styles for accessibility */
+.mobileBtn:focus {
+    outline: 3px solid #FFD700;
+    outline-offset: 2px;
+}
+
+/* Print styles for photo gallery */
+@media print {
+    #mobileControls,
+    #loadingScreen {
+        display: none !important;
+    }
+    
+    #gameCanvas {
+        width: 100%;
+        height: auto;
+    }
+}

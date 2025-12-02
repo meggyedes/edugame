@@ -1,0 +1,32 @@
+{
+  "name": "edugame",
+  "version": "1.0.0",
+  "description": "Milo van Zee: World Explorer - An educational adventure game for children aged 9-12",
+  "main": "dist/main.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "npx serve .",
+    "dev": "tsc --watch & npx serve ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/meggyedes/edugame.git"
+  },
+  "keywords": [
+    "educational",
+    "game",
+    "typescript",
+    "adventure"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/meggyedes/edugame/issues"
+  },
+  "homepage": "https://github.com/meggyedes/edugame#readme",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
