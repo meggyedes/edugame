@@ -61,6 +61,9 @@ export class InputHandler {
                 this.inputState.right = true;
                 break;
             case 'Space':
+                this.inputState.action = true;
+                e.preventDefault();
+                break;
             case 'KeyE':
                 this.inputState.action = true;
                 e.preventDefault();
@@ -83,18 +86,15 @@ export class InputHandler {
             case 'KeyJ':
                 this.inputState.journal = true;
                 break;
-            // Camera controls
-            case 'KeyQ':
-                this.inputState.zoomOut = true;
-                break;
-            case 'KeyE':
-                this.inputState.zoomIn = true;
-                break;
+            // Camera zoom controls - X zoom out, Y zoom in
             case 'KeyX':
                 this.inputState.zoomOut = true;
                 break;
             case 'KeyY':
                 this.inputState.zoomIn = true;
+                break;
+            case 'KeyQ':
+                this.inputState.zoomOut = true;
                 break;
             case 'KeyR':
                 this.inputState.focusUp = true;
@@ -123,6 +123,8 @@ export class InputHandler {
                 this.inputState.right = false;
                 break;
             case 'Space':
+                this.inputState.action = false;
+                break;
             case 'KeyE':
                 this.inputState.action = false;
                 break;
@@ -144,18 +146,15 @@ export class InputHandler {
             case 'KeyJ':
                 this.inputState.journal = false;
                 break;
-            // Camera controls
-            case 'KeyQ':
-                this.inputState.zoomOut = false;
-                break;
-            case 'KeyE':
-                this.inputState.zoomIn = false;
-                break;
+            // Camera zoom controls - X zoom out, Y zoom in
             case 'KeyX':
                 this.inputState.zoomOut = false;
                 break;
             case 'KeyY':
                 this.inputState.zoomIn = false;
+                break;
+            case 'KeyQ':
+                this.inputState.zoomOut = false;
                 break;
             case 'KeyR':
                 this.inputState.focusUp = false;

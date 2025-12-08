@@ -127,6 +127,58 @@ export const translations: Translations = {
     use_camera: { nl: 'Druk [C] om je camera te gebruiken', en: 'Press [C] to use your camera' },
     click_to_view: { nl: 'Klik om te bekijken', en: 'Click to view' },
     back_to_grid: { nl: 'Terug naar overzicht', en: 'Back to gallery' },
+    
+    // Journal
+    field_journal: { nl: 'Veld Dagboek', en: 'Field Journal' },
+    press_j_esc_close: { nl: '[J] of [ESC] om te sluiten', en: '[J] or [ESC] to close' },
+    journal_empty: { nl: 'Je dagboek is nog leeg!', en: 'Your journal is empty!' },
+    look_for_clues: { nl: 'Zoek naar aanwijzingen in de wereld:', en: 'Look for clues in the world:' },
+    clue_types: { nl: '🐾 Pootafdrukken 🪶 Veren 🕳️ Holen 🌰 Noten', en: '🐾 Footprints 🪶 Feathers 🕳️ Burrows 🌰 Nuts' },
+    take_photos_hint: { nl: 'Maak ook foto\'s van dieren met [C]!', en: 'Also take photos of animals with [C]!' },
+    evidence: { nl: 'Aanwijzingen', en: 'Evidence' },
+    facts: { nl: 'Feiten', en: 'Facts' },
+    found: { nl: 'gevonden', en: 'found' },
+    no_photo_yet: { nl: 'Nog geen foto!', en: 'No photo yet!' },
+    find_and_photo: { nl: 'Vind dit dier en maak een foto', en: 'Find this animal and take a photo' },
+    unknown_animal: { nl: 'Onbekend dier', en: 'Unknown animal' },
+    habitat: { nl: 'Leefgebied', en: 'Habitat' },
+    diet: { nl: 'Voedsel', en: 'Diet' },
+    size: { nl: 'Grootte', en: 'Size' },
+    did_you_know: { nl: 'Wist je dat...', en: 'Did you know...' },
+    
+    // Badges
+    badge_unlocked: { nl: 'Badge Ontgrendeld!', en: 'Badge Unlocked!' },
+    badges_unlocked: { nl: 'ontgrendeld', en: 'unlocked' },
+    
+    // VHS Camera / Wildlife Scanner
+    vhs_camera_hint_nl: { nl: 'WASD: Camera | X/Y: Zoom | Klik: Foto', en: 'WASD: Camera | X/Y: Zoom | Click: Photo' },
+    scanning: { nl: 'SCANNEN...', en: 'SCANNING...' },
+    ready: { nl: 'GEREED', en: 'READY' },
+    target_found: { nl: 'DOEL GEVONDEN', en: 'TARGET FOUND' },
+    type: { nl: 'Type', en: 'Type' },
+    distance: { nl: 'Afstand', en: 'Distance' },
+    confidence: { nl: 'Zekerheid', en: 'Confidence' },
+    objective_identify_tracks: { nl: 'DOEL: IDENTIFICEER SPOREN', en: 'OBJECTIVE: IDENTIFY TRACKS' },
+    scan: { nl: 'SCAN', en: 'SCAN' },
+    capture: { nl: 'FOTO', en: 'CAPTURE' },
+    
+    // HUD
+    move: { nl: 'Bewegen', en: 'Move' },
+    camera: { nl: 'Camera', en: 'Camera' },
+    map: { nl: 'Kaart', en: 'Map' },
+    bag: { nl: 'Tas', en: 'Bag' },
+    
+    // BiomeSelectScreen
+    choose_biome: { nl: 'Kies een Bioom', en: 'Choose a Biome' },
+    discover_animals: { nl: 'Ontdek dieren en verzamel foto\'s!', en: 'Discover animals and collect photos!' },
+    animals: { nl: 'dieren', en: 'animals' },
+    
+    // Menu
+    play: { nl: 'Spelen', en: 'Play' },
+    discover_tagline_nl: { nl: '🌿 Ontdek dieren • Maak foto\'s • Leer over de natuur 🌿', en: '🌿 Discover animals • Take photos • Learn about nature 🌿' },
+    
+    // Not unlocked
+    not_unlocked_yet: { nl: 'Nog niet ontgrendeld', en: 'Not unlocked yet' },
 };
 
 export class I18n {

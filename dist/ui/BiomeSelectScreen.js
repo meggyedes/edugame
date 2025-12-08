@@ -120,11 +120,11 @@ export class BiomeSelectScreen {
         ctx.fillStyle = '#FFF';
         ctx.font = 'bold 42px Georgia, serif';
         ctx.textAlign = 'center';
-        ctx.fillText(lang === 'nl' ? '🌍 Kies een Bioom' : '🌍 Choose a Biome', this.canvasWidth / 2, 80);
+        ctx.fillText('🌍 ' + this.i18n.t('choose_biome'), this.canvasWidth / 2, 80);
         // Subtitle
         ctx.font = '18px Arial';
         ctx.fillStyle = '#AAA';
-        ctx.fillText(lang === 'nl' ? 'Ontdek dieren en verzamel foto\'s!' : 'Discover animals and collect photos!', this.canvasWidth / 2, 115);
+        ctx.fillText(this.i18n.t('discover_animals'), this.canvasWidth / 2, 115);
         // Render biome cards
         this.renderBiomeCards(ctx, lang);
         // Back button
@@ -239,7 +239,7 @@ export class BiomeSelectScreen {
         // Animal count
         ctx.font = '11px Arial';
         ctx.fillStyle = isLocked ? '#444' : '#DDD';
-        ctx.fillText(`${biome.animals.length} ${lang === 'nl' ? 'dieren' : 'animals'}`, x + w / 2, y + h - 35);
+        ctx.fillText(`${biome.animals.length} ${this.i18n.t('animals')}`, x + w / 2, y + h - 35);
         // Completion star
         if (progress?.completed) {
             ctx.font = '24px Arial';
@@ -266,7 +266,7 @@ export class BiomeSelectScreen {
         ctx.fillStyle = '#FFF';
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(lang === 'nl' ? '← Terug' : '← Back', btnX + btnWidth / 2, btnY + 28);
+        ctx.fillText('← ' + this.i18n.t('back'), btnX + btnWidth / 2, btnY + 28);
     }
     renderTotalProgress(ctx, lang) {
         // Calculate total progress

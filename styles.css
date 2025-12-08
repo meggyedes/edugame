@@ -72,6 +72,7 @@ html, body {
 #fullscreenBtn svg {
     width: 24px;
     height: 24px;
+    flex-shrink: 0;
 }
 
 /* Hide fullscreen button when in fullscreen */
@@ -89,20 +90,18 @@ html, body {
 #mobileControls {
     display: none;
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 20px;
+    inset: 0;
+    padding: 16px;
     pointer-events: none;
     z-index: 50;
 }
 
 #joystick {
-    position: fixed;
-    bottom: 30px;
-    left: 30px;
-    width: 120px;
-    height: 120px;
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    width: min(26vw, 120px);
+    height: min(26vw, 120px);
     background: rgba(255, 255, 255, 0.2);
     border: 3px solid rgba(255, 255, 255, 0.4);
     border-radius: 50%;
@@ -114,31 +113,31 @@ html, body {
 }
 
 #joystickKnob {
-    width: 50px;
-    height: 50px;
+    width: 42%;
+    height: 42%;
     background: rgba(255, 255, 255, 0.6);
     border-radius: 50%;
     transition: transform 0.05s ease-out;
 }
 
 #mobileButtons {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
     pointer-events: auto;
 }
 
 .mobileBtn {
-    width: 70px;
-    height: 70px;
+    width: min(18vw, 72px);
+    height: min(18vw, 72px);
     border-radius: 50%;
     border: 3px solid rgba(255, 255, 255, 0.6);
     background: rgba(76, 175, 80, 0.8);
     color: white;
-    font-size: 24px;
+    font-size: min(5vw, 22px);
     font-weight: bold;
     cursor: pointer;
     display: flex;

@@ -900,21 +900,23 @@ export class Game {
         // Handle VHS camera zoom and focus controls
         if (this.vhsCamera.isActiveMode()) {
             const fullInputState = this.input.getInputState();
-            // Q to zoom out
+            // X / Q to zoom out (deltaTime based for smooth zooming)
             if (fullInputState.zoomOut) {
-                this.vhsCamera.zoomOut();
+                const currentZoom = this.vhsCamera.getZoom();
+                this.vhsCamera.setZoom(currentZoom - deltaTime * 1.5);
             }
-            // E to zoom in (Note: E is also action key, but when camera is active, use for zoom)
+            // Y to zoom in (deltaTime based for smooth zooming)
             if (fullInputState.zoomIn) {
-                this.vhsCamera.zoomIn();
+                const currentZoom = this.vhsCamera.getZoom();
+                this.vhsCamera.setZoom(currentZoom + deltaTime * 1.5);
             }
             // R to increase focus
             if (fullInputState.focusUp) {
-                this.vhsCamera.adjustFocus(0.02);
+                this.vhsCamera.adjustFocus(deltaTime * 0.5);
             }
             // F to decrease focus
             if (fullInputState.focusDown) {
-                this.vhsCamera.adjustFocus(-0.02);
+                this.vhsCamera.adjustFocus(-deltaTime * 0.5);
             }
             // WASD to move handheld camera (not player!)
             let camDx = 0, camDy = 0;
@@ -1148,6 +1150,22 @@ export class Game {
             cameraX += offset.x;
             cameraY += offset.y;
         }
+        // Apply zoom transformation when camera is active
+        const isZoomed = this.vhsCamera.isActiveMode() && this.vhsCamera.getZoom() > 1.0;
+        if (isZoomed) {
+            const zoom = this.vhsCamera.getZoom();
+            const centerX = this.width / 2;
+            const centerY = this.height / 2;
+            // Save context and apply zoom transform
+            this.ctx.save();
+            this.ctx.translate(centerX, centerY);
+            this.ctx.scale(zoom, zoom);
+            this.ctx.translate(-centerX, -centerY);
+            // Adjust camera position to keep center point stable
+            // When zoomed, we see less of the world, so adjust camera
+            cameraX += (centerX / zoom - centerX) + centerX * (1 - 1 / zoom);
+            cameraY += (centerY / zoom - centerY) + centerY * (1 - 1 / zoom);
+        }
         if (this.inBiomeMode && this.currentBiomeLevel) {
             // === BIOME MODE RENDERING ===
             const biomeType = this.currentBiomeLevel.getBiomeType();
@@ -1235,7 +1253,11 @@ export class Game {
         }
         // Render player
         this.player.render(this.ctx, cameraX, cameraY);
-        // Render VHS camera overlay if active
+        // Restore zoom transform before rendering UI overlays
+        if (this.vhsCamera.isActiveMode() && this.vhsCamera.getZoom() > 1.0) {
+            this.ctx.restore();
+        }
+        // Render VHS camera overlay if active (on top, not zoomed)
         if (this.vhsCamera.isActiveMode()) {
             this.vhsCamera.render(this.ctx);
         }

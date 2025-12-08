@@ -150,9 +150,9 @@ export class Journal {
         ctx.scale(this.openAnimation, this.openAnimation);
         ctx.translate(-this.canvasWidth / 2, -this.canvasHeight / 2);
 
-        // Journal container
-        const containerWidth = Math.min(900, this.canvasWidth - 60);
-        const containerHeight = Math.min(550, this.canvasHeight - 100);
+        // Journal container - MUCH LARGER for readability
+        const containerWidth = Math.min(1200, this.canvasWidth - 40);
+        const containerHeight = Math.min(750, this.canvasHeight - 60);
         const containerX = (this.canvasWidth - containerWidth) / 2;
         const containerY = (this.canvasHeight - containerHeight) / 2;
 
@@ -174,9 +174,9 @@ export class Journal {
 
         // Close hint
         ctx.fillStyle = '#8B4513';
-        ctx.font = '12px Arial';
+        ctx.font = '16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('[J] or [ESC] to close', this.canvasWidth / 2, containerY + containerHeight + 30);
+        ctx.fillText(this.i18n.t('press_j_esc_close'), this.canvasWidth / 2, containerY + containerHeight + 35);
 
         ctx.restore();
     }
@@ -208,42 +208,41 @@ export class Journal {
 
         // Title
         ctx.fillStyle = '#5D4037';
-        ctx.font = 'bold 22px Georgia, serif';
+        ctx.font = 'bold 28px Georgia, serif';
         ctx.textAlign = 'center';
-        ctx.fillText('📓 Field Journal', this.canvasWidth / 2, y + 35);
+        ctx.fillText('📓 ' + this.i18n.t('field_journal'), this.canvasWidth / 2, y + 40);
     }
 
     private renderEmptyState(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number): void {
         ctx.fillStyle = '#8B7355';
-        ctx.font = '18px Arial';
+        ctx.font = 'bold 26px Arial';
         ctx.textAlign = 'center';
         
-        const lang = this.i18n.getLanguage();
-        const title = lang === 'nl' ? 'Je dagboek is nog leeg!' : 'Your journal is empty!';
-        const hint1 = lang === 'nl' ? 'Zoek naar aanwijzingen in de wereld:' : 'Look for clues in the world:';
-        const hint2 = lang === 'nl' ? '🐾 Pootafdrukken 🪶 Veren 🕳️ Holen 🌰 Noten' : '🐾 Footprints 🪶 Feathers 🕳️ Burrows 🌰 Nuts';
-        const hint3 = lang === 'nl' ? 'Maak ook foto\'s van dieren met [C]!' : 'Also take photos of animals with [C]!';
+        const title = this.i18n.t('journal_empty');
+        const hint1 = this.i18n.t('look_for_clues');
+        const hint2 = this.i18n.t('clue_types');
+        const hint3 = this.i18n.t('take_photos_hint');
         
-        ctx.fillText(title, this.canvasWidth / 2, y + h / 2 - 40);
-        ctx.font = '14px Arial';
-        ctx.fillText(hint1, this.canvasWidth / 2, y + h / 2);
+        ctx.fillText(title, this.canvasWidth / 2, y + h / 2 - 60);
+        ctx.font = '18px Arial';
+        ctx.fillText(hint1, this.canvasWidth / 2, y + h / 2 - 10);
         ctx.fillText(hint2, this.canvasWidth / 2, y + h / 2 + 25);
-        ctx.fillText(hint3, this.canvasWidth / 2, y + h / 2 + 55);
+        ctx.fillText(hint3, this.canvasWidth / 2, y + h / 2 + 60);
         
-        ctx.font = '50px Arial';
-        ctx.fillText('🔍', this.canvasWidth / 2, y + h / 2 + 110);
+        ctx.font = '70px Arial';
+        ctx.fillText('🔍', this.canvasWidth / 2, y + h / 2 + 150);
     }
 
     private renderAnimalEntry(ctx: CanvasRenderingContext2D, entry: JournalAnimalEntry, containerX: number, containerY: number, containerWidth: number, containerHeight: number): void {
         const lang = this.i18n.getLanguage();
-        const panelY = containerY + 55;
-        const panelHeight = containerHeight - 100;
+        const panelY = containerY + 65;
+        const panelHeight = containerHeight - 120;
         
-        // Three columns: Evidence | Photo | Facts
-        const columnWidth = (containerWidth - 60) / 3;
-        const leftX = containerX + 20;
-        const middleX = containerX + 20 + columnWidth + 10;
-        const rightX = containerX + 20 + (columnWidth + 10) * 2;
+        // Three columns: Evidence | Photo | Facts - with more spacing
+        const columnWidth = (containerWidth - 80) / 3;
+        const leftX = containerX + 25;
+        const middleX = containerX + 25 + columnWidth + 15;
+        const rightX = containerX + 25 + (columnWidth + 15) * 2;
 
         // === LEFT PANEL: Evidence ===
         this.renderEvidencePanel(ctx, entry, leftX, panelY, columnWidth, panelHeight, lang);
@@ -257,90 +256,90 @@ export class Journal {
 
     private renderEvidencePanel(ctx: CanvasRenderingContext2D, entry: JournalAnimalEntry, x: number, y: number, w: number, h: number, lang: string): void {
         // Panel background
-        ctx.fillStyle = 'rgba(139, 115, 85, 0.1)';
-        this.roundRect(ctx, x, y, w, h, 5);
+        ctx.fillStyle = 'rgba(139, 115, 85, 0.15)';
+        this.roundRect(ctx, x, y, w, h, 8);
         ctx.fill();
         ctx.strokeStyle = '#8B7355';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.stroke();
 
         // Title
         ctx.fillStyle = '#5D4037';
-        ctx.font = 'bold 14px Arial';
+        ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(lang === 'nl' ? '🔍 Aanwijzingen' : '🔍 Evidence', x + w / 2, y + 25);
+        ctx.fillText('🔍 ' + this.i18n.t('evidence'), x + w / 2, y + 35);
 
         // Evidence items
         const allEvidence = EVIDENCE_DATABASE[entry.animalId] || [];
         const collectedEvidence = entry.collectedEvidence;
         
-        let itemY = y + 50;
+        let itemY = y + 65;
         allEvidence.forEach((evidence, index) => {
             const isCollected = collectedEvidence.some(e => e.type === evidence.type);
             
             ctx.fillStyle = isCollected ? '#4CAF50' : '#CCCCCC';
             ctx.beginPath();
-            ctx.arc(x + 20, itemY + 10, 12, 0, Math.PI * 2);
+            ctx.arc(x + 30, itemY + 15, 18, 0, Math.PI * 2);
             ctx.fill();
             
             ctx.fillStyle = isCollected ? '#000' : '#999';
-            ctx.font = '14px Arial';
+            ctx.font = '20px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(isCollected ? evidence.icon : '?', x + 20, itemY + 15);
+            ctx.fillText(isCollected ? evidence.icon : '?', x + 30, itemY + 22);
             
             ctx.fillStyle = isCollected ? '#333' : '#999';
-            ctx.font = isCollected ? '11px Arial' : 'italic 11px Arial';
+            ctx.font = isCollected ? 'bold 16px Arial' : 'italic 16px Arial';
             ctx.textAlign = 'left';
             const name = isCollected ? evidence.name[lang as 'nl' | 'en'] : '???';
-            ctx.fillText(name.length > 18 ? name.substring(0, 17) + '...' : name, x + 38, itemY + 14);
+            ctx.fillText(name.length > 20 ? name.substring(0, 19) + '...' : name, x + 58, itemY + 18);
             
             if (isCollected) {
                 ctx.fillStyle = '#666';
-                ctx.font = '9px Arial';
+                ctx.font = '13px Arial';
                 const desc = evidence.description[lang as 'nl' | 'en'];
-                ctx.fillText(desc.length > 25 ? desc.substring(0, 24) + '...' : desc, x + 38, itemY + 26);
+                ctx.fillText(desc.length > 30 ? desc.substring(0, 29) + '...' : desc, x + 58, itemY + 38);
             }
             
-            itemY += 45;
+            itemY += 65;
         });
 
         // Progress indicator
         const progress = collectedEvidence.length;
         const total = allEvidence.length;
         ctx.fillStyle = '#8B7355';
-        ctx.font = '11px Arial';
+        ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(`${progress}/${total} ${lang === 'nl' ? 'gevonden' : 'found'}`, x + w / 2, y + h - 15);
+        ctx.fillText(`${progress}/${total} ${this.i18n.t('found')}`, x + w / 2, y + h - 20);
     }
 
     private renderPhotoPanel(ctx: CanvasRenderingContext2D, entry: JournalAnimalEntry, x: number, y: number, w: number, h: number, lang: string): void {
         // Panel background
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-        this.roundRect(ctx, x, y, w, h, 5);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        this.roundRect(ctx, x, y, w, h, 8);
         ctx.fill();
         ctx.strokeStyle = '#8B7355';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.stroke();
 
         // Animal name
         const animalName = entry.facts?.name[lang as 'nl' | 'en'] || entry.animalId;
         ctx.fillStyle = '#5D4037';
-        ctx.font = 'bold 16px Georgia, serif';
+        ctx.font = 'bold 24px Georgia, serif';
         ctx.textAlign = 'center';
-        ctx.fillText(animalName, x + w / 2, y + 30);
+        ctx.fillText(animalName, x + w / 2, y + 38);
         
         // Scientific name
         if (entry.facts?.scientificName) {
             ctx.fillStyle = '#888';
-            ctx.font = 'italic 11px Arial';
-            ctx.fillText(entry.facts.scientificName, x + w / 2, y + 45);
+            ctx.font = 'italic 15px Arial';
+            ctx.fillText(entry.facts.scientificName, x + w / 2, y + 58);
         }
 
         // Photo area
-        const photoY = y + 55;
-        const photoHeight = h - 100;
-        const photoWidth = w - 20;
-        const photoX = x + 10;
+        const photoY = y + 75;
+        const photoHeight = h - 130;
+        const photoWidth = w - 30;
+        const photoX = x + 15;
 
         if (entry.photo) {
             // Polaroid frame
@@ -361,14 +360,14 @@ export class Journal {
 
             // Photo date
             ctx.fillStyle = '#666';
-            ctx.font = '10px Arial';
+            ctx.font = '14px Arial';
             const date = new Date(entry.photo.timestamp);
-            ctx.fillText(date.toLocaleDateString(), x + w / 2, photoY + photoHeight + 20);
+            ctx.fillText(date.toLocaleDateString(), x + w / 2, photoY + photoHeight + 25);
             
             // Points
             ctx.fillStyle = '#DAA520';
-            ctx.font = 'bold 12px Arial';
-            ctx.fillText(`⭐ ${entry.photo.points}`, x + w / 2, y + h - 10);
+            ctx.font = 'bold 18px Arial';
+            ctx.fillText(`⭐ ${entry.photo.points}`, x + w / 2, y + h - 15);
         } else {
             // No photo yet - show placeholder
             ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
@@ -381,85 +380,83 @@ export class Journal {
             ctx.setLineDash([]);
             
             ctx.fillStyle = '#999';
-            ctx.font = '40px Arial';
-            ctx.fillText('📷', x + w / 2, photoY + photoHeight / 2 + 10);
+            ctx.font = '60px Arial';
+            ctx.fillText('📷', x + w / 2, photoY + photoHeight / 2 + 15);
             
-            ctx.font = '12px Arial';
-            const hint = lang === 'nl' ? 'Nog geen foto!' : 'No photo yet!';
-            ctx.fillText(hint, x + w / 2, photoY + photoHeight / 2 + 45);
+            ctx.font = '18px Arial';
+            ctx.fillText(this.i18n.t('no_photo_yet'), x + w / 2, photoY + photoHeight / 2 + 60);
             
-            ctx.font = '10px Arial';
-            const hint2 = lang === 'nl' ? 'Vind dit dier en maak een foto' : 'Find this animal and take a photo';
-            ctx.fillText(hint2, x + w / 2, photoY + photoHeight / 2 + 60);
+            ctx.font = '14px Arial';
+            ctx.fillText(this.i18n.t('find_and_photo'), x + w / 2, photoY + photoHeight / 2 + 85);
         }
     }
 
     private renderFactsPanel(ctx: CanvasRenderingContext2D, entry: JournalAnimalEntry, x: number, y: number, w: number, h: number, lang: string): void {
         // Panel background
-        ctx.fillStyle = 'rgba(139, 115, 85, 0.1)';
-        this.roundRect(ctx, x, y, w, h, 5);
+        ctx.fillStyle = 'rgba(139, 115, 85, 0.15)';
+        this.roundRect(ctx, x, y, w, h, 8);
         ctx.fill();
         ctx.strokeStyle = '#8B7355';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.stroke();
 
         // Title
         ctx.fillStyle = '#5D4037';
-        ctx.font = 'bold 14px Arial';
+        ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(lang === 'nl' ? '📖 Feiten' : '📖 Facts', x + w / 2, y + 25);
+        ctx.fillText('📖 ' + this.i18n.t('facts'), x + w / 2, y + 35);
 
         if (!entry.facts) {
             ctx.fillStyle = '#999';
-            ctx.font = '12px Arial';
-            ctx.fillText(lang === 'nl' ? 'Onbekend dier' : 'Unknown animal', x + w / 2, y + h / 2);
+            ctx.font = '18px Arial';
+            ctx.fillText(this.i18n.t('unknown_animal'), x + w / 2, y + h / 2);
             return;
         }
 
         const facts = entry.facts;
-        let factY = y + 50;
+        let factY = y + 70;
         ctx.textAlign = 'left';
 
         // Habitat
         ctx.fillStyle = '#5D4037';
-        ctx.font = 'bold 11px Arial';
-        ctx.fillText(`🏠 ${lang === 'nl' ? 'Leefgebied' : 'Habitat'}:`, x + 10, factY);
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`🏠 ${this.i18n.t('habitat')}:`, x + 15, factY);
         ctx.fillStyle = '#333';
-        ctx.font = '10px Arial';
+        ctx.font = '14px Arial';
         const habitat = facts.habitat[lang as 'nl' | 'en'];
-        this.wrapText(ctx, habitat, x + 10, factY + 14, w - 20, 12);
-        factY += 45;
+        this.wrapText(ctx, habitat, x + 15, factY + 22, w - 30, 18);
+        factY += 70;
 
         // Diet
         ctx.fillStyle = '#5D4037';
-        ctx.font = 'bold 11px Arial';
-        ctx.fillText(`🍽️ ${lang === 'nl' ? 'Voedsel' : 'Diet'}:`, x + 10, factY);
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`🍽️ ${this.i18n.t('diet')}:`, x + 15, factY);
         ctx.fillStyle = '#333';
-        ctx.font = '10px Arial';
+        ctx.font = '14px Arial';
         const diet = facts.diet[lang as 'nl' | 'en'];
-        this.wrapText(ctx, diet, x + 10, factY + 14, w - 20, 12);
-        factY += 45;
+        this.wrapText(ctx, diet, x + 15, factY + 22, w - 30, 18);
+        factY += 70;
 
         // Size
         ctx.fillStyle = '#5D4037';
-        ctx.font = 'bold 11px Arial';
-        ctx.fillText(`📏 ${lang === 'nl' ? 'Grootte' : 'Size'}:`, x + 10, factY);
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`📏 ${this.i18n.t('size')}:`, x + 15, factY);
         ctx.fillStyle = '#333';
-        ctx.font = '10px Arial';
-        ctx.fillText(facts.size[lang as 'nl' | 'en'], x + 10, factY + 14);
-        factY += 35;
+        ctx.font = '14px Arial';
+        ctx.fillText(facts.size[lang as 'nl' | 'en'], x + 15, factY + 22);
+        factY += 55;
 
         // Fun facts
         ctx.fillStyle = '#5D4037';
-        ctx.font = 'bold 11px Arial';
-        ctx.fillText(`💡 ${lang === 'nl' ? 'Wist je dat...' : 'Did you know...'}`, x + 10, factY);
-        factY += 16;
+        ctx.font = 'bold 16px Arial';
+        ctx.fillText(`💡 ${this.i18n.t('did_you_know')}`, x + 15, factY);
+        factY += 25;
 
         ctx.fillStyle = '#333';
-        ctx.font = '10px Arial';
+        ctx.font = '14px Arial';
         const funFacts = facts.funFacts[lang as 'nl' | 'en'];
         funFacts.slice(0, 3).forEach((fact, i) => {
-            ctx.fillText(`• ${fact.length > 35 ? fact.substring(0, 34) + '...' : fact}`, x + 10, factY + i * 14);
+            ctx.fillText(`• ${fact.length > 45 ? fact.substring(0, 44) + '...' : fact}`, x + 15, factY + i * 22);
         });
     }
 
@@ -467,54 +464,54 @@ export class Journal {
         const total = this.animalEntries.length;
         if (total <= 1) return;
 
-        const y = containerY + containerHeight - 35;
-        const btnSize = 35;
+        const y = containerY + containerHeight - 50;
+        const btnSize = 50;
 
         // Previous button
-        const prevX = containerX + 30;
+        const prevX = containerX + 40;
         const isPrevHovered = this.mouseX >= prevX && this.mouseX <= prevX + btnSize &&
                               this.mouseY >= y && this.mouseY <= y + btnSize;
         ctx.fillStyle = this.currentAnimalIndex > 0 ? (isPrevHovered ? '#5D4037' : '#8B7355') : '#CCC';
-        this.roundRect(ctx, prevX, y, btnSize, btnSize, 5);
+        this.roundRect(ctx, prevX, y, btnSize, btnSize, 8);
         ctx.fill();
         ctx.fillStyle = '#FFF';
-        ctx.font = 'bold 20px Arial';
+        ctx.font = 'bold 30px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText('‹', prevX + btnSize / 2, y + 25);
+        ctx.fillText('‹', prevX + btnSize / 2, y + 36);
 
         // Page indicator
         ctx.fillStyle = '#5D4037';
-        ctx.font = '14px Arial';
-        ctx.fillText(`${this.currentAnimalIndex + 1} / ${total}`, this.canvasWidth / 2, y + 24);
+        ctx.font = 'bold 20px Arial';
+        ctx.fillText(`${this.currentAnimalIndex + 1} / ${total}`, this.canvasWidth / 2, y + 34);
 
         // Next button
-        const nextX = containerX + containerWidth - 30 - btnSize;
+        const nextX = containerX + containerWidth - 40 - btnSize;
         const isNextHovered = this.mouseX >= nextX && this.mouseX <= nextX + btnSize &&
                               this.mouseY >= y && this.mouseY <= y + btnSize;
         ctx.fillStyle = this.currentAnimalIndex < total - 1 ? (isNextHovered ? '#5D4037' : '#8B7355') : '#CCC';
-        this.roundRect(ctx, nextX, y, btnSize, btnSize, 5);
+        this.roundRect(ctx, nextX, y, btnSize, btnSize, 8);
         ctx.fill();
         ctx.fillStyle = '#FFF';
-        ctx.font = 'bold 20px Arial';
-        ctx.fillText('›', nextX + btnSize / 2, y + 25);
+        ctx.font = 'bold 30px Arial';
+        ctx.fillText('›', nextX + btnSize / 2, y + 36);
     }
 
     public handleClick(x: number, y: number): boolean {
         if (!this.isOpen) return false;
 
-        const containerWidth = Math.min(900, this.canvasWidth - 60);
-        const containerHeight = Math.min(550, this.canvasHeight - 100);
+        const containerWidth = Math.min(1200, this.canvasWidth - 40);
+        const containerHeight = Math.min(750, this.canvasHeight - 60);
         const containerX = (this.canvasWidth - containerWidth) / 2;
         const containerY = (this.canvasHeight - containerHeight) / 2;
 
         // Navigation clicks
         const total = this.animalEntries.length;
         if (total > 1) {
-            const navY = containerY + containerHeight - 35;
-            const btnSize = 35;
+            const navY = containerY + containerHeight - 50;
+            const btnSize = 50;
             
             // Previous
-            const prevX = containerX + 30;
+            const prevX = containerX + 40;
             if (x >= prevX && x <= prevX + btnSize && y >= navY && y <= navY + btnSize) {
                 if (this.currentAnimalIndex > 0) {
                     this.currentAnimalIndex--;
@@ -523,7 +520,7 @@ export class Journal {
             }
 
             // Next
-            const nextX = containerX + containerWidth - 30 - btnSize;
+            const nextX = containerX + containerWidth - 40 - btnSize;
             if (x >= nextX && x <= nextX + btnSize && y >= navY && y <= navY + btnSize) {
                 if (this.currentAnimalIndex < total - 1) {
                     this.currentAnimalIndex++;

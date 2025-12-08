@@ -294,7 +294,7 @@ export class BackpackMenu {
         ctx.font = '10px Arial';
         ctx.fillStyle = isLocked ? '#444' : '#AAA';
         const desc = isLocked ?
-            (lang === 'nl' ? 'Nog niet ontgrendeld' : 'Not unlocked yet') :
+            this.i18n.t('not_unlocked_yet') :
             item.description[lang];
         ctx.fillText(desc, this.backpackX + 55, itemY + 34);
     }

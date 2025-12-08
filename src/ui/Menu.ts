@@ -51,8 +51,8 @@ export class Menu {
         // Main play button - always visible
         this.buttons.push({ 
             text: this.hasProgress 
-                ? '▶  ' + (this.i18n.getLanguage() === 'nl' ? 'Doorgaan' : 'Continue')
-                : '▶  ' + (this.i18n.getLanguage() === 'nl' ? 'Spelen' : 'Play'),
+                ? '▶  ' + this.i18n.t('continue_game')
+                : '▶  ' + this.i18n.t('play'),
             action: 'start', 
             x: startX, 
             y: centerY, 
@@ -229,11 +229,7 @@ export class Menu {
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
         
-        const tagline = this.i18n.getLanguage() === 'nl' 
-            ? '🌿 Ontdek dieren • Maak foto\'s • Leer over de natuur 🌿'
-            : '🌿 Discover animals • Take photos • Learn about nature 🌿';
-        
-        ctx.fillText(tagline, centerX, y);
+        ctx.fillText(this.i18n.t('discover_tagline_nl'), centerX, y);
     }
 
     private renderButton(ctx: CanvasRenderingContext2D, button: Button): void {

@@ -63,18 +63,18 @@ export class InputHandler {
             case 'KeyS': case 'ArrowDown': this.inputState.down = true; break;
             case 'KeyA': case 'ArrowLeft': this.inputState.left = true; break;
             case 'KeyD': case 'ArrowRight': this.inputState.right = true; break;
-            case 'Space': case 'KeyE': this.inputState.action = true; e.preventDefault(); break;
+            case 'Space': this.inputState.action = true; e.preventDefault(); break;
+            case 'KeyE': this.inputState.action = true; e.preventDefault(); break;
             case 'KeyC': this.inputState.camera = true; break;
             case 'Escape': this.inputState.escape = true; break;
             case 'KeyM': this.inputState.map = true; break;
             case 'KeyB': this.inputState.backpack = true; break;
             case 'KeyT': this.inputState.badges = true; break;
             case 'KeyJ': this.inputState.journal = true; break;
-            // Camera controls
-            case 'KeyQ': this.inputState.zoomOut = true; break;
-            case 'KeyE': this.inputState.zoomIn = true; break;
+            // Camera zoom controls - X zoom out, Y zoom in
             case 'KeyX': this.inputState.zoomOut = true; break;
             case 'KeyY': this.inputState.zoomIn = true; break;
+            case 'KeyQ': this.inputState.zoomOut = true; break;
             case 'KeyR': this.inputState.focusUp = true; break;
             case 'KeyF': this.inputState.focusDown = true; break;
         }
@@ -86,18 +86,18 @@ export class InputHandler {
             case 'KeyS': case 'ArrowDown': this.inputState.down = false; break;
             case 'KeyA': case 'ArrowLeft': this.inputState.left = false; break;
             case 'KeyD': case 'ArrowRight': this.inputState.right = false; break;
-            case 'Space': case 'KeyE': this.inputState.action = false; break;
+            case 'Space': this.inputState.action = false; break;
+            case 'KeyE': this.inputState.action = false; break;
             case 'KeyC': this.inputState.camera = false; break;
             case 'Escape': this.inputState.escape = false; break;
             case 'KeyM': this.inputState.map = false; break;
             case 'KeyB': this.inputState.backpack = false; break;
             case 'KeyT': this.inputState.badges = false; break;
             case 'KeyJ': this.inputState.journal = false; break;
-            // Camera controls
-            case 'KeyQ': this.inputState.zoomOut = false; break;
-            case 'KeyE': this.inputState.zoomIn = false; break;
+            // Camera zoom controls - X zoom out, Y zoom in
             case 'KeyX': this.inputState.zoomOut = false; break;
             case 'KeyY': this.inputState.zoomIn = false; break;
+            case 'KeyQ': this.inputState.zoomOut = false; break;
             case 'KeyR': this.inputState.focusUp = false; break;
             case 'KeyF': this.inputState.focusDown = false; break;
         }

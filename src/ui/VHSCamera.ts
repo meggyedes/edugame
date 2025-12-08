@@ -1,5 +1,5 @@
-// VHSCamera - Retro VHS-style camera interface with zoom, focus, and vintage effects
-// Used to photograph evidence and animals
+// WildlifeScanner - Modern wildlife tracking camera with scanning interface
+// Used to photograph evidence and animals with a futuristic scanner aesthetic
 
 import type { Language } from '../types/index.js';
 import { I18n } from '../i18n/translations.js';
@@ -26,13 +26,20 @@ export class VHSCamera {
     private targetFocus: number = 0.5;  // What focus SHOULD be for current subject
     private autoFocusEnabled: boolean = false;
     
-    // VHS effects
+    // Scanner effects
     private scanlineOffset: number = 0;
-    private staticIntensity: number = 0;
-    private trackingError: number = 0;
+    private scanProgress: number = 0;  // 0-100 scanning animation
+    private isScanning: boolean = false;
+    private scanPulse: number = 0;
     private timestamp: number = Date.now();
     private recordingTime: number = 0;
     private batteryLevel: number = 100;
+    
+    // Target detection
+    private targetDetected: boolean = false;
+    private targetType: string = '';
+    private targetDistance: number = 0;
+    private targetConfidence: number = 0;
     
     // Animation
     private animationTimer: number = 0;
@@ -46,8 +53,9 @@ export class VHSCamera {
     // Handheld camera offset (world position offset from player)
     private cameraOffsetX: number = 0;
     private cameraOffsetY: number = 0;
-    private maxCameraOffset: number = 300;  // Max distance camera can move from player
-    private cameraSpeed: number = 200;  // Pixels per second
+    private maxCameraOffsetX: number = 600;  // Max horizontal distance camera can move from player
+    private maxCameraOffsetY: number = 450;  // Max vertical distance camera can move from player
+    private cameraSpeed: number = 250;  // Pixels per second (increased for larger range)
     
     // Hand shake effect
     private handShakeX: number = 0;
@@ -80,6 +88,10 @@ export class VHSCamera {
         this.crosshairX = canvasWidth / 2;
         this.crosshairY = canvasHeight / 2;
         this.isMobile = this.detectMobile();
+        
+        // Set max camera offset based on initial canvas size
+        this.maxCameraOffsetX = Math.max(400, canvasWidth * 0.5);
+        this.maxCameraOffsetY = Math.max(300, canvasHeight * 0.5);
     }
 
     private detectMobile(): boolean {
@@ -133,9 +145,9 @@ export class VHSCamera {
             this.cameraOffsetX = this.touchCameraOffsetX - dx * 0.5;
             this.cameraOffsetY = this.touchCameraOffsetY - dy * 0.5;
             
-            // Clamp to max offset
-            this.cameraOffsetX = Math.max(-this.maxCameraOffset, Math.min(this.maxCameraOffset, this.cameraOffsetX));
-            this.cameraOffsetY = Math.max(-this.maxCameraOffset, Math.min(this.maxCameraOffset, this.cameraOffsetY));
+            // Clamp to max offset (separate X/Y for widescreen support)
+            this.cameraOffsetX = Math.max(-this.maxCameraOffsetX, Math.min(this.maxCameraOffsetX, this.cameraOffsetX));
+            this.cameraOffsetY = Math.max(-this.maxCameraOffsetY, Math.min(this.maxCameraOffsetY, this.cameraOffsetY));
         } else if (touches.length === 2) {
             // Two finger touch - pinch to zoom
             const dx = touches[0].clientX - touches[1].clientX;
@@ -240,10 +252,23 @@ export class VHSCamera {
         this.animationTimer += deltaTime;
         this.recordingTime += deltaTime;
         
-        // VHS effects animation
-        this.scanlineOffset = (this.scanlineOffset + deltaTime * 50) % 4;
-        this.staticIntensity = Math.random() * 0.03;  // Subtle static
-        this.trackingError = Math.sin(this.animationTimer * 0.5) * 2;  // Slight tracking wobble
+        // Scanner effects animation
+        this.scanlineOffset = (this.scanlineOffset + deltaTime * 100) % 360;
+        this.scanPulse = (Math.sin(this.animationTimer * 3) + 1) / 2;  // 0-1 pulsing
+        
+        // Scanning progress when target detected
+        if (this.targetDetected && this.scanProgress < 100) {
+            this.scanProgress = Math.min(100, this.scanProgress + deltaTime * 30);
+            this.isScanning = true;
+        } else if (!this.targetDetected) {
+            this.scanProgress = Math.max(0, this.scanProgress - deltaTime * 50);
+            this.isScanning = this.scanProgress > 0;
+        }
+        
+        // Target confidence fluctuation
+        if (this.targetDetected) {
+            this.targetConfidence = 85 + Math.sin(this.animationTimer * 2) * 10;
+        }
         
         // Handheld shake effect - subtle realistic camera shake
         this.handShakeX = (Math.sin(this.animationTimer * 8) + Math.sin(this.animationTimer * 13)) * this.handShakeIntensity;
@@ -282,9 +307,9 @@ export class VHSCamera {
         this.cameraOffsetX += dx * this.cameraSpeed * deltaTime;
         this.cameraOffsetY += dy * this.cameraSpeed * deltaTime;
         
-        // Clamp to max offset
-        this.cameraOffsetX = Math.max(-this.maxCameraOffset, Math.min(this.maxCameraOffset, this.cameraOffsetX));
-        this.cameraOffsetY = Math.max(-this.maxCameraOffset, Math.min(this.maxCameraOffset, this.cameraOffsetY));
+        // Clamp to max offset (separate X/Y for widescreen support)
+        this.cameraOffsetX = Math.max(-this.maxCameraOffsetX, Math.min(this.maxCameraOffsetX, this.cameraOffsetX));
+        this.cameraOffsetY = Math.max(-this.maxCameraOffsetY, Math.min(this.maxCameraOffsetY, this.cameraOffsetY));
     }
 
     // Get camera offset for rendering
@@ -483,70 +508,450 @@ export class VHSCamera {
     }
 
     private renderVHSOverlay(ctx: CanvasRenderingContext2D): void {
-        // === DIGITAL CAMERA FRAME (like holding a compact camera) ===
+        const lang = this.i18n.getLanguage();
         
-        const screenPadding = 60;  // Camera body thickness
-        const cornerRadius = 15;
+        // === MODERN WILDLIFE SCANNER INTERFACE ===
         
-        // Camera body - dark gray/black frame around the screen
-        ctx.fillStyle = '#1a1a1a';
+        // Dark vignette around edges (depth of field simulation)
+        this.renderVignette(ctx);
         
-        // Top camera body
-        ctx.fillRect(0, 0, this.canvasWidth, screenPadding);
+        // Scanner frame overlay
+        this.renderScannerFrame(ctx);
         
-        // Bottom camera body (thicker for buttons)
-        ctx.fillRect(0, this.canvasHeight - screenPadding - 20, this.canvasWidth, screenPadding + 20);
+        // Central targeting reticle with paw icon
+        this.renderTargetingReticle(ctx);
         
-        // Left camera body
-        ctx.fillRect(0, 0, screenPadding - 20, this.canvasHeight);
+        // Top HUD - scanning status and target info
+        this.renderTopHUD(ctx, lang);
         
-        // Right camera body (thicker for grip)
-        ctx.fillRect(this.canvasWidth - screenPadding - 30, 0, screenPadding + 30, this.canvasHeight);
+        // Side panels with data
+        this.renderSidePanels(ctx, lang);
         
-        // Inner bevel/frame around LCD screen
-        const lcdX = screenPadding - 15;
-        const lcdY = screenPadding + 5;
-        const lcdW = this.canvasWidth - screenPadding * 2 - 20;
-        const lcdH = this.canvasHeight - screenPadding * 2 - 30;
+        // Bottom control bar
+        this.renderBottomControlBar(ctx, lang);
         
-        // LCD screen border (slight bevel effect)
-        ctx.strokeStyle = '#333';
-        ctx.lineWidth = 3;
-        this.roundRect(ctx, lcdX - 3, lcdY - 3, lcdW + 6, lcdH + 6, 8);
-        ctx.stroke();
-        
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 1;
-        this.roundRect(ctx, lcdX - 1, lcdY - 1, lcdW + 2, lcdH + 2, 6);
-        ctx.stroke();
-        
-        // Camera brand/model text on top
-        ctx.fillStyle = '#888';
-        ctx.font = 'bold 11px Arial';
-        ctx.textAlign = 'left';
-        ctx.fillText('MILO-CAM', 15, 25);
-        ctx.font = '9px Arial';
-        ctx.fillStyle = '#666';
-        ctx.fillText('DIGITAL', 15, 38);
-        
-        // Right side - camera grip texture
-        this.renderCameraGrip(ctx);
-        
-        // Right side - camera buttons
-        this.renderCameraButtons(ctx);
-        
-        // Bottom - navigation wheel and controls
-        this.renderBottomControls(ctx);
-        
-        // LCD Screen overlay elements
-        this.renderLCDOverlay(ctx, lcdX, lcdY, lcdW, lcdH);
-        
-        // Viewfinder brackets (on LCD)
-        this.renderViewfinder(ctx);
+        // Scanning effect overlay
+        if (this.isScanning) {
+            this.renderScanningEffect(ctx);
+        }
         
         // Mobile touch buttons (only on mobile/tablet)
         if (this.isMobile) {
             this.renderMobileControls(ctx);
+        }
+    }
+
+    private renderVignette(ctx: CanvasRenderingContext2D): void {
+        // Strong bokeh/depth of field vignette
+        const gradient = ctx.createRadialGradient(
+            this.canvasWidth / 2, this.canvasHeight / 2, this.canvasWidth * 0.25,
+            this.canvasWidth / 2, this.canvasHeight / 2, this.canvasWidth * 0.7
+        );
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0.1)');
+        gradient.addColorStop(0.8, 'rgba(0, 0, 0, 0.4)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.7)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, this.canvasWidth, this.canvasHeight);
+    }
+
+    private renderScannerFrame(ctx: CanvasRenderingContext2D): void {
+        // Corner brackets (like the image)
+        const margin = 40;
+        const bracketLength = 60;
+        const bracketWidth = 3;
+        
+        ctx.strokeStyle = 'rgba(0, 200, 255, 0.8)';
+        ctx.lineWidth = bracketWidth;
+        ctx.lineCap = 'round';
+        
+        // Top-left corner
+        ctx.beginPath();
+        ctx.moveTo(margin, margin + bracketLength);
+        ctx.lineTo(margin, margin);
+        ctx.lineTo(margin + bracketLength, margin);
+        ctx.stroke();
+        
+        // Top-right corner
+        ctx.beginPath();
+        ctx.moveTo(this.canvasWidth - margin - bracketLength, margin);
+        ctx.lineTo(this.canvasWidth - margin, margin);
+        ctx.lineTo(this.canvasWidth - margin, margin + bracketLength);
+        ctx.stroke();
+        
+        // Bottom-left corner
+        ctx.beginPath();
+        ctx.moveTo(margin, this.canvasHeight - margin - bracketLength);
+        ctx.lineTo(margin, this.canvasHeight - margin);
+        ctx.lineTo(margin + bracketLength, this.canvasHeight - margin);
+        ctx.stroke();
+        
+        // Bottom-right corner
+        ctx.beginPath();
+        ctx.moveTo(this.canvasWidth - margin - bracketLength, this.canvasHeight - margin);
+        ctx.lineTo(this.canvasWidth - margin, this.canvasHeight - margin);
+        ctx.lineTo(this.canvasWidth - margin, this.canvasHeight - margin - bracketLength);
+        ctx.stroke();
+        
+        // Thin scanning lines at top and bottom
+        ctx.strokeStyle = 'rgba(0, 200, 255, 0.3)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 5; i++) {
+            const y = margin + 10 + i * 3;
+            ctx.beginPath();
+            ctx.moveTo(margin + 20, y);
+            ctx.lineTo(this.canvasWidth - margin - 20, y);
+            ctx.stroke();
+        }
+    }
+
+    private renderTargetingReticle(ctx: CanvasRenderingContext2D): void {
+        const centerX = this.canvasWidth / 2;
+        const centerY = this.canvasHeight / 2;
+        const reticleSize = 100;
+        
+        // Outer rotating ring
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(this.scanlineOffset * Math.PI / 180);
+        
+        // Dashed outer circle
+        ctx.strokeStyle = this.targetDetected ? 'rgba(0, 255, 100, 0.8)' : 'rgba(0, 200, 255, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([10, 10]);
+        ctx.beginPath();
+        ctx.arc(0, 0, reticleSize + 20, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        ctx.restore();
+        
+        // Inner targeting brackets
+        const innerSize = 70;
+        const bracketLen = 20;
+        
+        ctx.strokeStyle = this.targetDetected ? '#00ff66' : '#00ccff';
+        ctx.lineWidth = 3;
+        
+        // Pulsing effect
+        const pulse = this.targetDetected ? (1 + this.scanPulse * 0.3) : 1;
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.scale(pulse, pulse);
+        
+        // Top bracket
+        ctx.beginPath();
+        ctx.moveTo(-bracketLen, -innerSize);
+        ctx.lineTo(0, -innerSize);
+        ctx.lineTo(0, -innerSize + 10);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(bracketLen, -innerSize);
+        ctx.lineTo(0, -innerSize);
+        ctx.stroke();
+        
+        // Bottom bracket
+        ctx.beginPath();
+        ctx.moveTo(-bracketLen, innerSize);
+        ctx.lineTo(0, innerSize);
+        ctx.lineTo(0, innerSize - 10);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(bracketLen, innerSize);
+        ctx.lineTo(0, innerSize);
+        ctx.stroke();
+        
+        // Left bracket
+        ctx.beginPath();
+        ctx.moveTo(-innerSize, -bracketLen);
+        ctx.lineTo(-innerSize, 0);
+        ctx.lineTo(-innerSize + 10, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-innerSize, bracketLen);
+        ctx.lineTo(-innerSize, 0);
+        ctx.stroke();
+        
+        // Right bracket
+        ctx.beginPath();
+        ctx.moveTo(innerSize, -bracketLen);
+        ctx.lineTo(innerSize, 0);
+        ctx.lineTo(innerSize - 10, 0);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(innerSize, bracketLen);
+        ctx.lineTo(innerSize, 0);
+        ctx.stroke();
+        
+        ctx.restore();
+        
+        // Center paw icon
+        this.renderPawIcon(ctx, centerX, centerY, 35);
+        
+        // Target lock indicator circles
+        if (this.targetDetected) {
+            ctx.strokeStyle = `rgba(0, 255, 100, ${0.3 + this.scanPulse * 0.4})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 50 + this.scanPulse * 10, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+    }
+
+    private renderPawIcon(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+        ctx.save();
+        ctx.translate(x, y);
+        
+        // Glow effect
+        ctx.shadowColor = this.targetDetected ? '#00ff66' : '#00ccff';
+        ctx.shadowBlur = 15;
+        
+        ctx.fillStyle = this.targetDetected ? 
+            `rgba(0, 255, 100, ${0.6 + this.scanPulse * 0.4})` : 
+            'rgba(0, 200, 255, 0.7)';
+        
+        // Main pad (large oval)
+        ctx.beginPath();
+        ctx.ellipse(0, 8, size * 0.5, size * 0.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Toe pads (4 circles)
+        const toePositions = [
+            { x: -size * 0.35, y: -size * 0.25, r: size * 0.2 },
+            { x: -size * 0.12, y: -size * 0.45, r: size * 0.18 },
+            { x: size * 0.12, y: -size * 0.45, r: size * 0.18 },
+            { x: size * 0.35, y: -size * 0.25, r: size * 0.2 },
+        ];
+        
+        toePositions.forEach(toe => {
+            ctx.beginPath();
+            ctx.arc(toe.x, toe.y, toe.r, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        
+        ctx.shadowBlur = 0;
+        ctx.restore();
+    }
+
+    private renderTopHUD(ctx: CanvasRenderingContext2D, lang: string): void {
+        const topY = 60;
+        
+        // Left side - SCANNING status
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        this.roundRect(ctx, 50, topY, 180, 35, 5);
+        ctx.fill();
+        
+        // Scanning indicator
+        const scanText = this.isScanning ? 
+            (lang === 'nl' ? 'SCANNEN...' : 'SCANNING...') :
+            (lang === 'nl' ? 'GEREED' : 'READY');
+        
+        ctx.fillStyle = this.isScanning ? '#00ff66' : '#00ccff';
+        ctx.font = 'bold 14px "Courier New", monospace';
+        ctx.textAlign = 'left';
+        
+        // Blinking dot
+        if (this.isScanning && Math.floor(this.animationTimer * 3) % 2 === 0) {
+            ctx.beginPath();
+            ctx.arc(65, topY + 18, 5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        ctx.fillText(scanText, 80, topY + 23);
+        
+        // Right side - Target info box
+        if (this.targetDetected) {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+            this.roundRect(ctx, this.canvasWidth - 230, topY, 180, 80, 5);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#00ff66';
+            ctx.lineWidth = 1;
+            this.roundRect(ctx, this.canvasWidth - 230, topY, 180, 80, 5);
+            ctx.stroke();
+            
+            ctx.fillStyle = '#00ff66';
+            ctx.font = 'bold 12px "Courier New", monospace';
+            ctx.textAlign = 'left';
+            ctx.fillText(lang === 'nl' ? 'DOEL GEVONDEN' : 'TARGET FOUND', this.canvasWidth - 220, topY + 18);
+            
+            ctx.fillStyle = '#fff';
+            ctx.font = '11px "Courier New", monospace';
+            ctx.fillText(`${lang === 'nl' ? 'Type' : 'Type'}: ${this.targetType || 'Animal'}`, this.canvasWidth - 220, topY + 35);
+            ctx.fillText(`${lang === 'nl' ? 'Afstand' : 'Distance'}: ${this.targetDistance}m`, this.canvasWidth - 220, topY + 50);
+            ctx.fillText(`${lang === 'nl' ? 'Zekerheid' : 'Confidence'}: ${Math.round(this.targetConfidence)}%`, this.canvasWidth - 220, topY + 65);
+        }
+    }
+
+    private renderSidePanels(ctx: CanvasRenderingContext2D, lang: string): void {
+        // Left side panel - Zoom & coordinates
+        const leftX = 50;
+        const panelY = this.canvasHeight / 2 - 80;
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        this.roundRect(ctx, leftX, panelY, 110, 150, 5);
+        ctx.fill();
+        
+        ctx.fillStyle = '#00ccff';
+        ctx.font = '10px "Courier New", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText('ZOOM [X/Y]', leftX + 10, panelY + 18);
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 22px "Courier New", monospace';
+        ctx.fillText(`${this.zoomLevel.toFixed(1)}x`, leftX + 10, panelY + 45);
+        
+        // Zoom bar (larger)
+        ctx.fillStyle = '#333';
+        ctx.fillRect(leftX + 10, panelY + 55, 90, 12);
+        ctx.fillStyle = '#00ccff';
+        ctx.fillRect(leftX + 10, panelY + 55, ((this.zoomLevel - 1) / 2) * 90, 12);
+        
+        // Zoom hints
+        ctx.fillStyle = '#666';
+        ctx.font = '9px "Courier New", monospace';
+        ctx.fillText('X: -   Y: +', leftX + 10, panelY + 82);
+        
+        // Coordinates
+        ctx.fillStyle = '#888';
+        const coords = `${Math.round(this.cameraOffsetX)}, ${Math.round(this.cameraOffsetY)}`;
+        ctx.fillText(`POS: ${coords}`, leftX + 10, panelY + 100);
+        
+        // Time
+        const now = new Date();
+        ctx.fillText(now.toLocaleTimeString('nl-NL'), leftX + 10, panelY + 118);
+        ctx.fillText(now.toLocaleDateString('nl-NL'), leftX + 10, panelY + 135);
+    }
+
+    private renderBottomControlBar(ctx: CanvasRenderingContext2D, lang: string): void {
+        const barHeight = 60;
+        const barY = this.canvasHeight - barHeight - 20;
+        
+        // Semi-transparent bar background
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.roundRect(ctx, 50, barY, this.canvasWidth - 100, barHeight, 10);
+        ctx.fill();
+        
+        // Left side - Objective
+        ctx.fillStyle = 'rgba(50, 50, 50, 0.8)';
+        this.roundRect(ctx, 60, barY + 10, 200, 40, 5);
+        ctx.fill();
+        
+        // Objective icon and text
+        ctx.fillStyle = '#888';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🎯', 85, barY + 38);
+        
+        ctx.fillStyle = '#aaa';
+        ctx.font = '10px "Courier New", monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(lang === 'nl' ? 'DOEL: IDENTIFICEER SPOREN' : 'OBJECTIVE: IDENTIFY TRACKS', 110, barY + 35);
+        
+        // Center - Main buttons
+        const centerX = this.canvasWidth / 2;
+        
+        // SCAN button (X)
+        const scanBtnX = centerX - 80;
+        ctx.fillStyle = 'rgba(0, 150, 200, 0.6)';
+        this.roundRect(ctx, scanBtnX, barY + 10, 70, 40, 8);
+        ctx.fill();
+        ctx.strokeStyle = '#00ccff';
+        ctx.lineWidth = 2;
+        this.roundRect(ctx, scanBtnX, barY + 10, 70, 40, 8);
+        ctx.stroke();
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('Ⓧ', scanBtnX + 20, barY + 28);
+        ctx.fillText('SCAN', scanBtnX + 35, barY + 42);
+        
+        // CAPTURE button (Y)
+        const captureBtnX = centerX + 10;
+        ctx.fillStyle = 'rgba(200, 50, 50, 0.6)';
+        this.roundRect(ctx, captureBtnX, barY + 10, 90, 40, 8);
+        ctx.fill();
+        ctx.strokeStyle = '#ff6666';
+        ctx.lineWidth = 2;
+        this.roundRect(ctx, captureBtnX, barY + 10, 90, 40, 8);
+        ctx.stroke();
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px Arial';
+        ctx.fillText('Ⓨ', captureBtnX + 20, barY + 28);
+        ctx.fillText(lang === 'nl' ? 'FOTO' : 'CAPTURE', captureBtnX + 55, barY + 42);
+        
+        // Right side - Recording indicator
+        const recX = this.canvasWidth - 150;
+        ctx.fillStyle = 'rgba(50, 50, 50, 0.8)';
+        this.roundRect(ctx, recX, barY + 10, 90, 40, 5);
+        ctx.fill();
+        
+        // REC dot (blinking)
+        if (Math.floor(this.animationTimer * 2) % 2 === 0) {
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(recX + 20, barY + 30, 6, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 12px "Courier New", monospace';
+        ctx.textAlign = 'left';
+        const mins = Math.floor(this.recordingTime / 60);
+        const secs = Math.floor(this.recordingTime % 60);
+        ctx.fillText(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`, recX + 35, barY + 35);
+    }
+
+    private renderScanningEffect(ctx: CanvasRenderingContext2D): void {
+        const centerX = this.canvasWidth / 2;
+        const centerY = this.canvasHeight / 2;
+        
+        // Scanning line sweeping effect
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate((this.scanlineOffset * 2) * Math.PI / 180);
+        
+        // Radial scanning line
+        const gradient = ctx.createLinearGradient(0, 0, 150, 0);
+        gradient.addColorStop(0, 'rgba(0, 255, 100, 0.8)');
+        gradient.addColorStop(1, 'rgba(0, 255, 100, 0)');
+        
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(150, 0);
+        ctx.stroke();
+        
+        ctx.restore();
+        
+        // Progress bar at bottom of reticle
+        const progressWidth = 100;
+        const progressX = centerX - progressWidth / 2;
+        const progressY = centerY + 90;
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(progressX, progressY, progressWidth, 6);
+        
+        ctx.fillStyle = '#00ff66';
+        ctx.fillRect(progressX, progressY, (this.scanProgress / 100) * progressWidth, 6);
+        
+        // Percentage text
+        ctx.fillStyle = '#00ff66';
+        ctx.font = 'bold 10px "Courier New", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${Math.round(this.scanProgress)}%`, centerX, progressY + 18);
+    }
+
+    // New method to set target detection status
+    public setTargetDetected(detected: boolean, type: string = '', distance: number = 0): void {
+        this.targetDetected = detected;
+        this.targetType = type;
+        this.targetDistance = distance;
+        if (!detected) {
+            this.scanProgress = 0;
         }
     }
 
@@ -556,25 +961,25 @@ export class VHSCamera {
         
         // === LEFT SIDE - Movement pad ===
         const padX = margin + btnSize;
-        const padY = this.canvasHeight - margin - btnSize * 2;
+        const padY = this.canvasHeight - margin - btnSize * 2 - 80;  // Above bottom bar
         
         // Virtual joystick background
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillStyle = 'rgba(0, 100, 150, 0.4)';
         ctx.beginPath();
         ctx.arc(padX, padY, btnSize, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.strokeStyle = 'rgba(0, 200, 255, 0.6)';
         ctx.lineWidth = 2;
         ctx.stroke();
         
-        // Joystick center (shows current touch position)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        // Joystick center
+        ctx.fillStyle = 'rgba(0, 200, 255, 0.7)';
         ctx.beginPath();
         ctx.arc(padX + this.touchCameraOffsetX * 0.3, padY + this.touchCameraOffsetY * 0.3, 25, 0, Math.PI * 2);
         ctx.fill();
         
         // Direction arrows
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
         ctx.font = '16px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('▲', padX, padY - 35);
@@ -585,31 +990,29 @@ export class VHSCamera {
         // === RIGHT SIDE - Action buttons ===
         const rightX = this.canvasWidth - margin - btnSize / 2;
         
-        // Photo/Capture button (large, red)
-        const captureY = this.canvasHeight - margin - btnSize;
-        ctx.fillStyle = 'rgba(200, 50, 50, 0.8)';
+        // Photo/Capture button (large, cyan)
+        const captureY = this.canvasHeight - margin - btnSize - 80;
+        ctx.fillStyle = 'rgba(0, 150, 200, 0.8)';
         ctx.beginPath();
         ctx.arc(rightX, captureY, btnSize / 2, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 100, 100, 0.9)';
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.9)';
         ctx.lineWidth = 3;
         ctx.stroke();
-        // Camera icon
         ctx.fillStyle = '#fff';
         ctx.font = '20px Arial';
         ctx.textAlign = 'center';
         ctx.fillText('📷', rightX, captureY + 7);
         
-        // Store button position for touch detection
         this.mobileButtonAreas.capture = { x: rightX, y: captureY, radius: btnSize / 2 };
         
         // Zoom IN button (+)
         const zoomInY = captureY - btnSize - 20;
-        ctx.fillStyle = 'rgba(50, 150, 50, 0.8)';
+        ctx.fillStyle = 'rgba(0, 100, 150, 0.8)';
         ctx.beginPath();
         ctx.arc(rightX, zoomInY, 25, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(100, 255, 100, 0.9)';
+        ctx.strokeStyle = 'rgba(0, 200, 255, 0.9)';
         ctx.lineWidth = 2;
         ctx.stroke();
         ctx.fillStyle = '#fff';
@@ -619,11 +1022,11 @@ export class VHSCamera {
         
         // Zoom OUT button (-)
         const zoomOutY = zoomInY - 60;
-        ctx.fillStyle = 'rgba(50, 100, 150, 0.8)';
+        ctx.fillStyle = 'rgba(0, 100, 150, 0.8)';
         ctx.beginPath();
         ctx.arc(rightX, zoomOutY, 25, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(100, 150, 255, 0.9)';
+        ctx.strokeStyle = 'rgba(0, 200, 255, 0.9)';
         ctx.lineWidth = 2;
         ctx.stroke();
         ctx.fillStyle = '#fff';
@@ -646,292 +1049,14 @@ export class VHSCamera {
         ctx.fillText('✕', closeX, closeY + 7);
         this.mobileButtonAreas.close = { x: closeX, y: closeY, radius: 22 };
         
-        // Movement pad area
         this.mobileButtonAreas.movePad = { x: padX, y: padY, radius: btnSize };
-    }
-
-    private renderCameraGrip(ctx: CanvasRenderingContext2D): void {
-        const gripX = this.canvasWidth - 45;
-        const gripY = 80;
-        const gripHeight = 150;
-        
-        // Grip texture (rubber-like pattern)
-        ctx.fillStyle = '#222';
-        for (let y = gripY; y < gripY + gripHeight; y += 8) {
-            ctx.fillRect(gripX, y, 30, 4);
-        }
-        
-        // Grip highlight
-        ctx.strokeStyle = '#444';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(gripX - 2, gripY - 5, 35, gripHeight + 10);
-    }
-
-    private renderCameraButtons(ctx: CanvasRenderingContext2D): void {
-        const btnX = this.canvasWidth - 35;
-        
-        // Shutter button (red circle at top)
-        ctx.fillStyle = '#cc3333';
-        ctx.beginPath();
-        ctx.arc(btnX, 45, 12, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#ff4444';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        
-        // Inner shutter button
-        ctx.fillStyle = '#ff5555';
-        ctx.beginPath();
-        ctx.arc(btnX, 45, 6, 0, Math.PI * 2);
-        ctx.fill();
-        
-        // Zoom rocker (below grip)
-        const zoomY = 260;
-        ctx.fillStyle = '#333';
-        ctx.fillRect(btnX - 15, zoomY, 30, 50);
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(btnX - 15, zoomY, 30, 50);
-        
-        // W (wide) label
-        ctx.fillStyle = '#888';
-        ctx.font = '8px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('W', btnX, zoomY + 15);
-        
-        // T (tele) label
-        ctx.fillText('T', btnX, zoomY + 45);
-        
-        // Zoom level indicator
-        ctx.fillStyle = '#00ff00';
-        ctx.font = 'bold 10px Arial';
-        ctx.fillText(`${this.zoomLevel.toFixed(1)}x`, btnX, zoomY + 30);
-    }
-
-    private renderBottomControls(ctx: CanvasRenderingContext2D): void {
-        const bottomY = this.canvasHeight - 50;
-        
-        // Navigation wheel (D-pad style)
-        const wheelX = this.canvasWidth / 2;
-        const wheelY = bottomY + 10;
-        const wheelSize = 35;
-        
-        // Outer ring
-        ctx.strokeStyle = '#444';
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(wheelX, wheelY, wheelSize, 0, Math.PI * 2);
-        ctx.stroke();
-        
-        // Inner button
-        ctx.fillStyle = '#333';
-        ctx.beginPath();
-        ctx.arc(wheelX, wheelY, 15, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#555';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        
-        // Direction indicators
-        ctx.fillStyle = '#666';
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('▲', wheelX, wheelY - 20);
-        ctx.fillText('▼', wheelX, wheelY + 27);
-        ctx.fillText('◄', wheelX - 25, wheelY + 4);
-        ctx.fillText('►', wheelX + 25, wheelY + 4);
-        
-        // Menu button (left of wheel)
-        ctx.fillStyle = '#333';
-        ctx.fillRect(wheelX - 80, wheelY - 12, 30, 24);
-        ctx.strokeStyle = '#555';
-        ctx.strokeRect(wheelX - 80, wheelY - 12, 30, 24);
-        ctx.fillStyle = '#888';
-        ctx.font = '8px Arial';
-        ctx.fillText('MENU', wheelX - 65, wheelY + 4);
-        
-        // Playback button (right of wheel)
-        ctx.fillStyle = '#333';
-        ctx.fillRect(wheelX + 50, wheelY - 12, 30, 24);
-        ctx.strokeStyle = '#555';
-        ctx.strokeRect(wheelX + 50, wheelY - 12, 30, 24);
-        ctx.fillStyle = '#888';
-        ctx.fillText('▶', wheelX + 65, wheelY + 4);
-    }
-
-    private renderLCDOverlay(ctx: CanvasRenderingContext2D, lcdX: number, lcdY: number, lcdW: number, lcdH: number): void {
-        const lang = this.i18n.getLanguage();
-        
-        // Top info bar (semi-transparent)
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillRect(lcdX, lcdY, lcdW, 28);
-        
-        // Bottom info bar
-        ctx.fillRect(lcdX, lcdY + lcdH - 35, lcdW, 35);
-        
-        // === TOP BAR INFO ===
-        ctx.font = 'bold 12px Arial';
-        ctx.textAlign = 'left';
-        
-        // Photo mode indicator
-        ctx.fillStyle = '#ffcc00';
-        ctx.fillText('P', lcdX + 10, lcdY + 18);
-        
-        // Image size
-        ctx.fillStyle = '#fff';
-        ctx.font = '10px Arial';
-        ctx.fillText('12M', lcdX + 35, lcdY + 18);
-        
-        // Quality
-        ctx.fillStyle = '#ff9900';
-        ctx.fillText('FINE', lcdX + 70, lcdY + 18);
-        
-        // Flash off indicator
-        ctx.fillStyle = '#fff';
-        ctx.font = '12px Arial';
-        ctx.fillText('⚡', lcdX + 110, lcdY + 18);
-        ctx.strokeStyle = '#ff0000';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(lcdX + 105, lcdY + 22);
-        ctx.lineTo(lcdX + 120, lcdY + 8);
-        ctx.stroke();
-        
-        // Battery indicator (top right)
-        ctx.textAlign = 'right';
-        const batteryX = lcdX + lcdW - 10;
-        const batteryY = lcdY + 10;
-        
-        // Battery outline
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(batteryX - 25, batteryY, 20, 10);
-        ctx.fillStyle = '#fff';
-        ctx.fillRect(batteryX - 5, batteryY + 3, 3, 4);
-        
-        // Battery fill
-        const batteryFill = (this.batteryLevel / 100) * 16;
-        ctx.fillStyle = this.batteryLevel > 20 ? '#00ff00' : '#ff0000';
-        ctx.fillRect(batteryX - 23, batteryY + 2, batteryFill, 6);
-        
-        // Shots remaining
-        ctx.fillStyle = '#fff';
-        ctx.font = '10px Arial';
-        ctx.fillText('999', batteryX - 35, lcdY + 18);
-        
-        // === BOTTOM BAR INFO ===
-        ctx.textAlign = 'left';
-        
-        // Zoom indicator
-        ctx.fillStyle = '#00ff00';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText(`${this.zoomLevel.toFixed(1)}x`, lcdX + 10, lcdY + lcdH - 18);
-        
-        // Focus indicator
-        const focusColor = this.getFocusIndicatorColor();
-        ctx.fillStyle = focusColor;
-        ctx.fillText('●', lcdX + 60, lcdY + lcdH - 18);
-        ctx.fillStyle = '#fff';
-        ctx.font = '10px Arial';
-        ctx.fillText('AF', lcdX + 75, lcdY + lcdH - 18);
-        
-        // Quality percentage
-        const quality = this.calculatePhotoQuality();
-        ctx.textAlign = 'center';
-        ctx.fillStyle = quality > 70 ? '#00ff00' : quality > 40 ? '#ffcc00' : '#ff0000';
-        ctx.font = 'bold 16px Arial';
-        ctx.fillText(`${quality}%`, lcdX + lcdW / 2, lcdY + lcdH - 15);
-        
-        // Controls hint
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.font = '9px Arial';
-        const hint = lang === 'nl' ? 'WASD: Kamera | X/Y: Zoom | Klik: Foto' 
-                                   : 'WASD: Camera | X/Y: Zoom | Click: Photo';
-        ctx.fillText(hint, lcdX + lcdW / 2, lcdY + lcdH - 3);
-        
-        // ISO/Date (right side of bottom bar)
-        ctx.textAlign = 'right';
-        ctx.fillStyle = '#fff';
-        ctx.font = '10px Arial';
-        const now = new Date();
-        ctx.fillText(`ISO AUTO`, lcdX + lcdW - 10, lcdY + lcdH - 22);
-        ctx.fillText(now.toLocaleDateString('nl-NL'), lcdX + lcdW - 10, lcdY + lcdH - 8);
-        
-        // Recording time (if recording)
-        if (this.recordingTime > 0) {
-            ctx.textAlign = 'left';
-            const recVisible = Math.floor(this.animationTimer * 2) % 2 === 0;
-            if (recVisible) {
-                ctx.fillStyle = '#ff0000';
-                ctx.beginPath();
-                ctx.arc(lcdX + lcdW - 50, lcdY + 40, 5, 0, Math.PI * 2);
-                ctx.fill();
-            }
-            ctx.fillStyle = '#fff';
-            ctx.font = '12px Arial';
-            const mins = Math.floor(this.recordingTime / 60);
-            const secs = Math.floor(this.recordingTime % 60);
-            ctx.fillText(`${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`, lcdX + lcdW - 40, lcdY + 44);
-        }
-    }
-
-    private renderViewfinder(ctx: CanvasRenderingContext2D): void {
-        const centerX = this.canvasWidth / 2 - 10;  // Slightly offset for camera body
-        const centerY = this.canvasHeight / 2;
-        const size = 80;
-
-        // Focus brackets (white, like real digital cameras)
-        ctx.strokeStyle = this.getFocusIndicatorColor();
-        ctx.lineWidth = 2;
-
-        const cornerLength = 15;
-        
-        // Top-left bracket
-        ctx.beginPath();
-        ctx.moveTo(centerX - size, centerY - size + cornerLength);
-        ctx.lineTo(centerX - size, centerY - size);
-        ctx.lineTo(centerX - size + cornerLength, centerY - size);
-        ctx.stroke();
-
-        // Top-right bracket
-        ctx.beginPath();
-        ctx.moveTo(centerX + size - cornerLength, centerY - size);
-        ctx.lineTo(centerX + size, centerY - size);
-        ctx.lineTo(centerX + size, centerY - size + cornerLength);
-        ctx.stroke();
-
-        // Bottom-left bracket
-        ctx.beginPath();
-        ctx.moveTo(centerX - size, centerY + size - cornerLength);
-        ctx.lineTo(centerX - size, centerY + size);
-        ctx.lineTo(centerX - size + cornerLength, centerY + size);
-        ctx.stroke();
-
-        // Bottom-right bracket
-        ctx.beginPath();
-        ctx.moveTo(centerX + size - cornerLength, centerY + size);
-        ctx.lineTo(centerX + size, centerY + size);
-        ctx.lineTo(centerX + size, centerY + size - cornerLength);
-        ctx.stroke();
-
-        // Center focus point (small square)
-        ctx.strokeStyle = this.getFocusIndicatorColor();
-        ctx.lineWidth = 1;
-        ctx.strokeRect(centerX - 8, centerY - 8, 16, 16);
-        
-        // Additional focus points (like real cameras have multiple AF points)
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-        ctx.strokeRect(centerX - 50, centerY - 8, 12, 12);  // Left
-        ctx.strokeRect(centerX + 38, centerY - 8, 12, 12);  // Right
-        ctx.strokeRect(centerX - 8, centerY - 45, 12, 12);  // Top
-        ctx.strokeRect(centerX - 8, centerY + 33, 12, 12);  // Bottom
     }
 
     private getFocusIndicatorColor(): string {
         const focusDiff = Math.abs(this.focusLevel - this.targetFocus);
-        if (focusDiff < 0.1) return '#00FF00';  // Green = good focus
-        if (focusDiff < 0.25) return '#FFFF00';  // Yellow = okay
-        return '#FF0000';  // Red = bad focus
+        if (focusDiff < 0.1) return '#00FF00';
+        if (focusDiff < 0.25) return '#FFFF00';
+        return '#FF0000';
     }
 
     private renderPhotoPreview(ctx: CanvasRenderingContext2D): void {
@@ -986,5 +1111,10 @@ export class VHSCamera {
         this.canvasHeight = height;
         this.crosshairX = width / 2;
         this.crosshairY = height / 2;
+        
+        // Dynamically adjust max camera offset based on screen size
+        // Allow camera to pan further on larger screens
+        this.maxCameraOffsetX = Math.max(400, width * 0.5);  // At least half screen width
+        this.maxCameraOffsetY = Math.max(300, height * 0.5);  // At least half screen height
     }
 }

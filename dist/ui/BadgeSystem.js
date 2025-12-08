@@ -315,7 +315,7 @@ export class BadgeSystem {
         ctx.fillStyle = '#FFD700';
         ctx.font = 'bold 16px Arial';
         ctx.textAlign = 'left';
-        ctx.fillText(lang === 'nl' ? '🎉 Badge Ontgrendeld!' : '🎉 Badge Unlocked!', boxX + 70, boxY + 28);
+        ctx.fillText('🎉 ' + this.i18n.t('badge_unlocked'), boxX + 70, boxY + 28);
         // Badge name
         ctx.fillStyle = '#FFF';
         ctx.font = 'bold 14px Arial';
@@ -371,7 +371,7 @@ export class BadgeSystem {
         // Progress
         ctx.fillStyle = '#AAA';
         ctx.font = '14px Arial';
-        ctx.fillText(`${this.getUnlockedCount()} / ${this.getTotalCount()} ${lang === 'nl' ? 'ontgrendeld' : 'unlocked'}`, width / 2, panelY + 55);
+        ctx.fillText(`${this.getUnlockedCount()} / ${this.getTotalCount()} ${this.i18n.t('badges_unlocked')}`, width / 2, panelY + 55);
         // Badge grid
         const cols = 4;
         const badgeSize = 80;
