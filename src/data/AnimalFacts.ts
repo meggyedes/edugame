@@ -308,6 +308,7 @@ export const ANIMAL_FACTS: Record<string, AnimalFacts> = {
         },
         size: { nl: '2-3 meter lang', en: '2-3 meters long' },
         lifespan: { nl: '25-30 jaar', en: '25-30 years' }
+        this.image = CanvasRenderer.loadNewImage('./Bear.docx');
     },
     arctic_fox: {
         name: { nl: 'Poolvos', en: 'Arctic Fox' },
