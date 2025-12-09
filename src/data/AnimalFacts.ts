@@ -145,6 +145,7 @@ export const ANIMAL_FACTS: Record<string, AnimalFacts> = {
         },
         size: { nl: '1-1.5 meter lang', en: '1-1.5 meters long' },
         lifespan: { nl: '6-13 jaar', en: '6-13 years' }
+        this.image = CanvasRenderer.loadNewImage('./Wolf.docx');
     },
     hedgehog: {
         name: { nl: 'Egel', en: 'Hedgehog' },
